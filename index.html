@@ -1,0 +1,924 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pawan Label Cropper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --paper:#f2f3ef; --card:#ffffff; --ink:#15181e; --muted:#5d6470; --line:#dfe1dc;
+  --accent:#2447d6; --accent-ink:#ffffff; --accent-soft:#e7ecfd; --tape:#f3c233;
+  --ok:#17804a; --ok-soft:#e3f4ea; --warn:#9a5a00; --warn-soft:#fff2da; --bad:#bf3030; --bad-soft:#fbe7e7;
+  --man:#1f63c7; --man-soft:#e4eefc; --thumb:#e9eae5; --shadow:0 1px 2px rgba(20,24,30,.06),0 6px 20px rgba(20,24,30,.06);
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#111317; --card:#1a1d23; --ink:#eceef2; --muted:#9aa1ad; --line:#2c3038;
+    --accent:#7d97ff; --accent-ink:#0d1120; --accent-soft:#232c4d; --tape:#e5b62a;
+    --ok:#5fd394; --ok-soft:#173326; --warn:#f0b75a; --warn-soft:#352812; --bad:#ff8a8a; --bad-soft:#3a1a1a;
+    --man:#8db6ff; --man-soft:#1c2b44; --thumb:#23262d; --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#111317; --card:#1a1d23; --ink:#eceef2; --muted:#9aa1ad; --line:#2c3038;
+  --accent:#7d97ff; --accent-ink:#0d1120; --accent-soft:#232c4d; --tape:#e5b62a;
+  --ok:#5fd394; --ok-soft:#173326; --warn:#f0b75a; --warn-soft:#352812; --bad:#ff8a8a; --bad-soft:#3a1a1a;
+  --man:#8db6ff; --man-soft:#1c2b44; --thumb:#23262d; --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--sans);padding-inline:16px;padding-block:0 40px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header.top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;padding-block:26px 6px}
+.brand{display:flex;gap:14px;align-items:center}
+.stamp{width:46px;height:62px;border:2px solid var(--ink);border-radius:4px;display:grid;place-items:center;background:var(--card);position:relative;flex:none}
+.stamp::before{content:"";position:absolute;top:-2px;left:10px;right:10px;height:8px;background:var(--tape);border-radius:0 0 2px 2px}
+.stamp span{font:600 10px/1 var(--mono);letter-spacing:.5px}
+h1{margin:0;font-size:24px;line-height:1.15;letter-spacing:-.2px;text-wrap:balance}
+.sub{margin:2px 0 0;color:var(--muted);font-size:13.5px}
+.spec{font:500 12.5px/1 var(--mono);color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
+.spec b{color:var(--ink);font-weight:600}
+.spec span{border:1px solid var(--line);background:var(--card);padding:6px 9px;border-radius:6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:20px}
+.drop{border:2px dashed color-mix(in srgb,var(--accent) 45%,var(--line));border-radius:10px;padding:30px 16px;display:grid;justify-items:center;gap:8px;text-align:center;cursor:pointer;transition:background .15s,border-color .15s}
+.drop.on{background:var(--accent-soft);border-color:var(--accent)}
+.drop:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.drop .t{font-weight:600;font-size:16px}
+.drop .h{color:var(--muted);font-size:13px;max-width:60ch}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:16px}
+.steps div{border-top:2px solid var(--ink);padding-top:8px;font-size:13.5px;color:var(--muted)}
+.steps b{display:block;color:var(--ink);font-size:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:8px;font:500 14px/1.2 var(--sans);cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:color-mix(in srgb,var(--ink) 30%,var(--line))}
+.btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.big{padding:11px 20px;font-size:15px}
+.btn.sm{padding:4px 9px;font-size:12.5px}
+.btn.go{background:var(--ok);border-color:var(--ok);color:var(--card);font-weight:600}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+h2{margin:0;font-size:17px}
+.muted{color:var(--muted)} .small{font-size:12.5px}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--muted);font-size:11.5px;font-weight:600;letter-spacing:.6px;text-transform:uppercase}
+tfoot td{font-weight:700;border-bottom:0}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.p-ok{background:var(--ok-soft);color:var(--ok)} .p-rev{background:var(--warn-soft);color:var(--warn)}
+.p-bad{background:var(--bad-soft);color:var(--bad)} .p-man{background:var(--man-soft);color:var(--man)} .p-busy{background:var(--accent-soft);color:var(--accent)}
+.bar{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+.warns{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.warn{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:var(--warn-soft);color:var(--ink);font-size:14px;flex-wrap:wrap}
+.warn.bad{background:var(--bad-soft)}
+details.set{margin-top:16px;border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+details.set summary{cursor:pointer;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 18px;margin-top:12px}
+.grid label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.grid label.ck{flex-direction:row;align-items:center;gap:8px;color:var(--ink)}
+.grid input[type=text],.grid input[type=number]{padding:7px 9px;border:1px solid var(--line);border-radius:7px;font:inherit;color:var(--ink);background:var(--paper);max-width:100%}
+.acts{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px}
+.done{font-weight:700;color:var(--ok)}
+.labels{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.lc{border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;background:var(--card)}
+.lc.rev{box-shadow:0 0 0 2px var(--warn-soft);border-color:var(--warn)}
+.lc.bad{box-shadow:0 0 0 2px var(--bad-soft);border-color:var(--bad)}
+.lc.off{opacity:.55}
+.th{aspect-ratio:2/3;background:var(--thumb);display:grid;place-items:center;border-bottom:1px solid var(--line);max-width:100%}
+.th img{width:100%;height:100%;object-fit:contain;display:block}
+.th .none{color:var(--bad);font-size:13px;padding:14px;text-align:center}
+.lb{padding:10px 11px;display:flex;flex-direction:column;gap:5px;font-size:13px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.conf{font:600 14px var(--mono)}
+.meta{color:var(--muted);font-size:12px;word-break:break-all}
+.rs{margin:0;padding-left:16px;color:var(--warn);font-size:12px}
+.lbtn{display:flex;gap:6px;flex-wrap:wrap;margin-top:3px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.note{font-size:12.5px;color:var(--muted);border-left:3px solid var(--tape);padding:4px 10px;margin-top:14px;max-width:80ch}
+.modal{position:fixed;inset:0;background:rgba(10,12,16,.6);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.mbox{background:var(--card);border-radius:12px;width:100%;max-width:1040px;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line)}
+.mhead{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);gap:10px}
+.mhead h3{margin:0;font-size:15.5px}
+.mbody{display:flex;gap:16px;padding:14px;overflow:auto;flex-wrap:wrap}
+.pv{position:relative;cursor:crosshair;user-select:none;touch-action:none;border:1px solid var(--line);align-self:flex-start;max-width:100%;margin-inline:auto}
+.pv canvas{display:block;max-width:100%;height:auto}
+.dbox{position:absolute;border:2px dashed var(--man);background:color-mix(in srgb,var(--man) 14%,transparent);pointer-events:none}
+.side{flex:1 1 240px;display:flex;flex-direction:column;gap:12px;font-size:13.5px;min-width:0}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:8px;font-size:14px;z-index:30;max-width:90vw}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="stamp" aria-hidden="true"><span>4×6</span></div>
+      <div>
+        <h1>Pawan Flipkart Label Cropper Automatically</h1>
+        <p class="sub">Flipkart PDF daalo → shipping label khud detect → exact 4 × 6 inch PDF</p>
+      </div>
+    </div>
+    <div class="spec"><span>page <b>288 × 432 pt</b></span><span>scale <b>uniform</b></span><span>files stay <b>in your browser</b></span></div>
+  </header>
+
+  <section class="card" id="upCard">
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Upload Flipkart PDF">
+      <input type="file" id="fileIn" accept=".pdf,application/pdf,.png,.jpg,.jpeg" multiple hidden>
+      <button class="btn pri big" type="button" id="pick">Upload Flipkart PDF</button>
+      <div class="muted small">or</div>
+      <div class="t">Drag &amp; Drop PDF Here</div>
+      <div class="h">Ek ya kai PDF ek saath. Har page check hota hai. PDF kisi server par upload nahi hoti, sab isi browser mein process hota hai.</div>
+    </div>
+    <div class="steps">
+      <div><b>1 · Detect</b>Label ki border lines aur keywords (AWB, HBD/CPD, Not for resale) se label dhoondhta hai.</div>
+      <div><b>2 · Invoice hatao</b>"Tax Invoice" aur dashed cut-line ke neeche ka sab crop se bahar.</div>
+      <div><b>3 · 4 × 6 PDF</b>Original label content, barcode/QR bina blur, bina stretch, center mein.</div>
+    </div>
+  </section>
+
+  <section class="card" id="sumCard" hidden>
+    <div class="head">
+      <h2>Uploaded files</h2>
+      <button class="btn" type="button" id="clearBtn">Clear / New batch</button>
+    </div>
+    <div id="prog" hidden><div class="small muted" id="progTxt">Working…</div><div class="bar"><i id="progBar"></i></div></div>
+    <div class="tbl"><table>
+      <thead><tr><th>Original PDF</th><th>Pages</th><th>Labels detected</th><th>Needs review</th><th>Status</th></tr></thead>
+      <tbody id="fBody"></tbody><tfoot id="fFoot"></tfoot>
+    </table></div>
+    <div class="warns" id="warns"></div>
+    <details class="set">
+      <summary>Output settings</summary>
+      <div class="grid">
+        <label>Output filename <input type="text" id="sName"></label>
+        <label>Confidence threshold (%) <input type="number" id="sThr" min="0" max="100" step="1" value="80"></label>
+        <label>Page margin on 4×6 (pt) <input type="number" id="sMar" min="0" max="36" step="0.5" value="4"></label>
+        <label>Padding around label (pt) <input type="number" id="sPad" min="0" max="20" step="0.5" value="2"></label>
+        <label class="ck"><input type="checkbox" id="sRot" checked> Landscape label ko rotate karke fit karo</label>
+        <label class="ck"><input type="checkbox" id="sLow"> Low-confidence labels bhi bina review include karo</label>
+      </div>
+    </details>
+    <div class="acts">
+      <button class="btn pri big" type="button" id="procBtn" disabled>Process Labels</button>
+      <span id="procTxt" class="muted"></span>
+    </div>
+    <div class="acts" id="dlRow" hidden>
+      <button class="btn go big" type="button" id="dlPdf">Download 4×6 PDF</button>
+      <button class="btn" type="button" id="dlZip">Download Individual Labels (ZIP)</button>
+      <button class="btn" type="button" id="printBtn" hidden>Print</button>
+      <button class="btn" type="button" id="reBtn">Reprocess</button>
+    </div>
+    <p class="note">Print ke liye: downloaded PDF kholo → printer choose karo → paper 4×6 in (100×150 mm) → scale <b>100% / Actual size</b>.</p>
+  </section>
+
+  <section class="card" id="labCard" hidden>
+    <div class="head">
+      <h2>Labels <span class="muted" id="labCount"></span></h2>
+      <div class="legend"><span><i style="background:var(--ok)"></i>Detected</span><span><i style="background:var(--warn)"></i>Review</span><span><i style="background:var(--man)"></i>Manual</span><span><i style="background:var(--bad)"></i>Not found</span></div>
+    </div>
+    <div class="labels" id="labGrid"></div>
+  </section>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="mbox" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="mhead"><h3 id="mTitle">Review page</h3><button class="btn" type="button" id="mClose" aria-label="Close">Close</button></div>
+    <div class="mbody">
+      <div class="pv" id="pv"><canvas id="pvCanvas"></canvas><div class="dbox" id="dbox" hidden></div></div>
+      <div class="side">
+        <div id="mInfo"></div>
+        <div><b>Manual crop</b><div class="muted small">Page par mouse (ya finger) se poore shipping label ke around box kheencho.</div></div>
+        <select id="mTarget" class="btn" aria-label="Crop target"></select>
+        <button class="btn pri" type="button" id="mSave" disabled>Use my crop</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+"use strict";
+/* ======================================================================
+   Pawan Flipkart Label Cropper Automatically - browser edition
+   Detection: raster ruling lines -> closed boxes + PDF text keywords.
+   Output:    pdf-lib embeds the ORIGINAL page region (vector + original
+              images) on exact 288 x 432 pt pages. Nothing leaves the browser.
+   ====================================================================== */
+const OUT_W = 288, OUT_H = 432, DPI = 150;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+/* ---------------- keywords ---------------- */
+const LABEL_ANCHORS = {
+  awb: { re: /\bAWB\b/i, strong: 1 }, ship_address: { re: /shipping\s*\/\s*customer\s*address/i, strong: 1, unique: 1 },
+  sku_id: { re: /\bSKU\s*ID\b/i, strong: 1 }, hbd: { re: /\bHBD\b/i, strong: 1, unique: 1 }, cpd: { re: /\bCPD\b/i, strong: 1, unique: 1 },
+  not_for_resale: { re: /not\s*for\s*re-?\s*sale/i, strong: 1, unique: 1 }, printed_at: { re: /printed\s*at\b/i, strong: 1, unique: 1 },
+  reg: { re: /^\s*REG\b/, strong: 1 }, payment: { re: /\b(PREPAID|COD|PRE-PAID)\b/ }, order_id: { re: /\b[O0]\s?D\s?\d{10,}\b/ },
+  qty: { re: /\bQTY\b/i }, ordered_through: { re: /ordered\s*through/i }, sold_by: { re: /sold\s*by/i }, gstin: { re: /\bGSTIN\b/i },
+};
+const INVOICE_RE = [/tax\s*invoice/i, /invoice\s*(no|number|date)\b/i, /billing\s*address/i, /authori[sz]ed\s*signat/i, /total\s*price/i,
+  /taxable/i, /gross\s*amount/i, /\bE\.?\s*&\s*O\.?\s*E\b/i, /conditions\s*apply/i, /seller\s*registered/i, /values\s*are\s*in\s*INR/i];
+const CORE = ["awb", "ship_address", "sku_id", "hbd", "cpd", "not_for_resale", "printed_at", "payment", "order_id", "qty", "ordered_through", "reg"];
+
+/* ---------------- geometry helpers (rects = [x0,y0,x1,y1] in viewport points) ---------------- */
+const R = { w: (r) => r[2] - r[0], h: (r) => r[3] - r[1], area: (r) => Math.max(0, r[2] - r[0]) * Math.max(0, r[3] - r[1]),
+  union: (a, b) => [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])],
+  inter: (a, b) => [Math.max(a[0], b[0]), Math.max(a[1], b[1]), Math.min(a[2], b[2]), Math.min(a[3], b[3])],
+  hits: (a, b) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3],
+  contains: (o, i, t = 0) => i[0] >= o[0] - t && i[1] >= o[1] - t && i[2] <= o[2] + t && i[3] <= o[3] + t,
+  center: (r) => [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2], grow: (r, p) => [r[0] - p, r[1] - p, r[2] + p, r[3] + p],
+  gap: (r, e) => Math.max(0, e[0] - r[2], r[0] - e[2], e[1] - r[3], r[1] - e[3]) };
+const inside = (r, p, t = 1) => p[0] >= r[0] - t && p[0] <= r[2] + t && p[1] >= r[1] - t && p[1] <= r[3] + t;
+const anchorsIn = (r, list) => list.filter((a) => inside(r, R.center(a.rect)));
+const distinct = (list) => new Set(list.map((a) => a.name));
+function dupUnique(list) {
+  const seen = {};
+  for (const a of list) {
+    if (!LABEL_ANCHORS[a.name]?.unique) continue;
+    for (const r of seen[a.name] || []) if (Math.abs(r[1] - a.rect[1]) > 2 || Math.abs(r[0] - a.rect[0]) > 2) return true;
+    (seen[a.name] = seen[a.name] || []).push(a.rect);
+  }
+  return false;
+}
+function labelLike(la, ia) {
+  const strong = new Set(la.filter((a) => LABEL_ANCHORS[a.name].strong).map((a) => a.name));
+  return strong.size >= 2 && distinct(la).size >= 3 && ia.length === 0 && !dupUnique(la);
+}
+
+/* ---------------- page rendering + raster analysis ---------------- */
+async function renderPage(entry, pno) {
+  const page = await entry.pdf.getPage(pno + 1);
+  const vp1 = page.getViewport({ scale: 1 });
+  const s = Math.min(DPI / 72, 2600 / Math.max(vp1.width, vp1.height));
+  const vp = page.getViewport({ scale: s });
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.ceil(vp.width); canvas.height = Math.ceil(vp.height);
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  await page.render({ canvasContext: ctx, viewport: vp }).promise;
+  const W = canvas.width, H = canvas.height, px = ctx.getImageData(0, 0, W, H).data;
+  const gray = new Uint8Array(W * H);
+  for (let i = 0, j = 0; i < gray.length; i++, j += 4) gray[i] = (px[j] * 299 + px[j + 1] * 587 + px[j + 2] * 114) / 1000;
+  const unit = Math.max(vp1.width, vp1.height) / 842;
+  const text = await page.getTextContent();
+  const pg = { page, vp1, s, W, H, gray, canvas, unit, ox: 0, oy: 0, rotate: page.rotate || 0 };
+  // drop text that is not actually visible (clipped away / hidden by another tool)
+  pg.items = textItems(text, vp1).filter((it) => {
+    const x0 = Math.max(0, Math.floor(it.rect[0] * s)), y0 = Math.max(0, Math.floor(it.rect[1] * s)), x1 = Math.min(W, Math.ceil(it.rect[2] * s)), y1 = Math.min(H, Math.ceil(it.rect[3] * s));
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) if (gray[y * W + x] < 170) return true;
+    return false;
+  });
+  return pg;
+}
+
+function textItems(text, vp1) {
+  const out = [];
+  for (const it of text.items) {
+    if (!it.str || !it.str.trim()) continue;
+    const m = pdfjsLib.Util.transform(vp1.transform, it.transform);
+    const fs = Math.hypot(m[2], m[3]) || 1, dl = Math.hypot(m[0], m[1]) || 1;
+    const d = [m[0] / dl, m[1] / dl], u = [m[2] / fs, m[3] / fs];
+    const w = it.width * (vp1.scale || 1), o = [m[4], m[5]];
+    const pts = [[-.22, 0], [-.22, 1], [.9, 0], [.9, 1]].map(([k, t]) => [o[0] + d[0] * w * t + u[0] * fs * k, o[1] + d[1] * w * t + u[1] * fs * k]);
+    const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+    out.push({ str: it.str, rect: [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)], d, fs, o, w });
+  }
+  return out;
+}
+
+function buildLines(items) {
+  const groups = {};
+  for (const it of items) {
+    const k = Math.abs(it.d[0]) >= Math.abs(it.d[1]) ? (it.d[0] > 0 ? 0 : 180) : (it.d[1] > 0 ? 90 : 270);
+    (groups[k] = groups[k] || []).push(it);
+  }
+  const lines = [];
+  for (const [k, list] of Object.entries(groups)) {
+    const d = { 0: [1, 0], 180: [-1, 0], 90: [0, 1], 270: [0, -1] }[k], n = [-d[1], d[0]];
+    const rows = list.map((it) => ({ it, a: it.o[0] * d[0] + it.o[1] * d[1], c: it.o[0] * n[0] + it.o[1] * n[1] })).sort((p, q) => p.c - q.c || p.a - q.a);
+    let cur = null;
+    for (const r of rows) {
+      if (cur && Math.abs(r.c - cur.c) < 0.5 * r.it.fs && r.a - cur.end < 1.6 * r.it.fs && r.a > cur.start - 0.5 * r.it.fs) {
+        cur.text += (r.a - cur.end > 0.15 * r.it.fs ? " " : "") + r.it.str;
+        cur.rect = R.union(cur.rect, r.it.rect); cur.end = Math.max(cur.end, r.a + r.it.w);
+      } else {
+        if (cur) lines.push(cur);
+        cur = { text: r.it.str, rect: r.it.rect.slice(), c: r.c, start: r.a, end: r.a + r.it.w, dir: d };
+      }
+    }
+    if (cur) lines.push(cur);
+  }
+  return lines;
+}
+
+function findAnchors(lines) {
+  const la = [], ia = [];
+  for (const ln of lines) {
+    for (const [name, def] of Object.entries(LABEL_ANCHORS)) if (def.re.test(ln.text)) la.push({ name, rect: ln.rect, text: ln.text });
+    for (const re of INVOICE_RE) if (re.test(ln.text)) { ia.push({ name: "invoice", rect: ln.rect, text: ln.text }); break; }
+  }
+  return { la, ia };
+}
+
+/* ruling lines from the raster; also returns a mask of line pixels */
+function rasterSegments(pg) {
+  const { gray, W, H, s, unit } = pg, ox = pg.ox || 0, oy = pg.oy || 0;
+  const dark = new Uint8Array(W * H);
+  for (let i = 0; i < dark.length; i++) dark[i] = gray[i] < 150 ? 1 : 0;
+  const L = Math.max(20, Math.round(0.35 * 72 * unit * s)), maxT = Math.max(3, Math.round(0.04 * 72 * s));
+  const lineMask = new Uint8Array(W * H), segs = [], dashRows = [];
+  const collect = (horizontal) => {
+    const outer = horizontal ? H : W, innerN = horizontal ? W : H;
+    let active = [];
+    for (let a = 0; a < outer; a++) {
+      const runs = []; let short = 0, shortSpan0 = -1, shortSpan1 = -1;
+      for (let b = 0; b < innerN;) {
+        const idx = horizontal ? a * W + b : b * W + a;
+        if (!dark[idx]) { b++; continue; }
+        const st = b;
+        while (b < innerN && dark[horizontal ? a * W + b : b * W + a]) b++;
+        const len = b - st;
+        if (len >= L) runs.push([st, b]);
+        else if (horizontal && len >= 3 && len <= 0.12 * 72 * s) { short++; if (shortSpan0 < 0) shortSpan0 = st; shortSpan1 = b; }
+      }
+      if (horizontal && short >= 15 && shortSpan1 - shortSpan0 > 0.5 * W && regularDashes(dark, a, W, shortSpan0, shortSpan1, s)) dashRows.push({ a, x0: shortSpan0, x1: shortSpan1, n: short });
+      const next = [];
+      for (const [st, en] of runs) {
+        for (let b = st; b < en; b++) lineMask[horizontal ? a * W + b : b * W + a] = 1;
+        let hit = null;
+        for (const g of active) if (g.last === a - 1 && Math.min(g.e, en) - Math.max(g.s0, st) > 0.5 * Math.min(g.e - g.s0, en - st)) { hit = g; break; }
+        if (hit) { hit.last = a; hit.s0 = Math.min(hit.s0, st); hit.e = Math.max(hit.e, en); hit.n++; next.push(hit); active = active.filter((g) => g !== hit); }
+        else next.push({ first: a, last: a, s0: st, e: en, n: 1 });
+      }
+      for (const g of active) if (g.n <= maxT) segs.push(mkSeg(g, horizontal, s, ox, oy));
+      active = next;
+    }
+    for (const g of active) if (g.n <= maxT) segs.push(mkSeg(g, horizontal, s, ox, oy));
+  };
+  collect(true); collect(false);
+  // dashed cut lines: rows with many short runs across the page
+  const dashed = [];
+  for (const d of dashRows) if (!dashed.length || d.a - dashed[dashed.length - 1].a0 > 3) dashed.push({ a0: d.a, y: oy + d.a / s, x0: ox + d.x0 / s, x1: ox + d.x1 / s });
+  return { segs, lineMask, dark, dashed };
+}
+/* a real cut line: equal dashes at equal spacing, and blank just above/below */
+function regularDashes(dark, row, W, x0, x1, s) {
+  const runs = [];
+  for (let x = x0; x < x1;) { if (!dark[row * W + x]) { x++; continue; } const st = x; while (x < x1 && dark[row * W + x]) x++; runs.push([st, x]); }
+  if (runs.length < 15) return false;
+  const lens = runs.map((r) => r[1] - r[0]).sort((a, b) => a - b), med = lens[lens.length >> 1];
+  const gaps = runs.slice(1).map((r, i) => r[0] - runs[i][1]).sort((a, b) => a - b), gmed = gaps[gaps.length >> 1];
+  const okL = lens.filter((l) => l >= .6 * med && l <= 1.6 * med).length / lens.length;
+  const okG = gaps.filter((g) => g >= .6 * gmed && g <= 1.6 * gmed).length / gaps.length;
+  if (okL < .85 || okG < .85) return false;
+  const off = Math.max(3, Math.round(0.03 * 72 * s));
+  let near = 0, tot = 0;
+  for (const dy of [-off, off]) { const r = row + dy; if (r < 0 || r * W >= dark.length) continue; for (let x = x0; x < x1; x++) { near += dark[r * W + x]; tot++; } }
+  return tot > 0 && near / tot < .08;
+}
+function mkSeg(g, horizontal, s, ox = 0, oy = 0) {
+  const pos = (g.first + g.last + 1) / 2 / s, t = g.n / s;
+  return horizontal ? { o: "h", pos: oy + pos, a: ox + g.s0 / s, b: ox + g.e / s, t } : { o: "v", pos: ox + pos, a: oy + g.s0 / s, b: oy + g.e / s, t };
+}
+
+function mergeSegs(segs, o, posTol, gap) {
+  const items = segs.filter((q) => q.o === o).sort((p, q) => p.pos - q.pos || p.a - q.a);
+  const clusters = [];
+  for (const q of items) { const c = clusters[clusters.length - 1]; if (c && Math.abs(q.pos - c[0].pos) <= posTol) c.push(q); else clusters.push([q]); }
+  const out = [];
+  for (const cl of clusters) {
+    const pos = cl.reduce((t, q) => t + q.pos, 0) / cl.length;
+    const sp = cl.map((q) => [q.a, q.b, q.t]).sort((p, q) => p[0] - q[0]);
+    let [a, b, t] = sp[0];
+    for (const [a2, b2, t2] of sp.slice(1)) { if (a2 <= b + gap) { b = Math.max(b, b2); t = Math.max(t, t2); } else { out.push({ o, pos, a, b, t }); a = a2; b = b2; t = t2; } }
+    out.push({ o, pos, a, b, t });
+  }
+  return out;
+}
+function coverage(list, pos, a, b, tol, maxGap) {
+  if (b <= a) return 0;
+  const sp = list.filter((q) => Math.abs(q.pos - pos) <= tol).map((q) => [Math.max(q.a, a), Math.min(q.b, b)]).filter((x) => x[1] > x[0]).sort((p, q) => p[0] - q[0]);
+  let total = 0, ca = null, cb = null, big = 0, lastEnd = a;
+  for (const [lo, hi] of sp) {
+    if (cb === null || lo > cb) { if (cb !== null) total += cb - ca; big = Math.max(big, lo - lastEnd); ca = lo; cb = hi; } else cb = Math.max(cb, hi);
+    lastEnd = Math.max(lastEnd, cb);
+  }
+  if (cb !== null) total += cb - ca;
+  big = Math.max(big, b - lastEnd);
+  return big > maxGap ? 0 : total / (b - a);
+}
+function findBoxes(segs, unit) {
+  const tol = 3 * unit, gap = 8 * unit, min = 50 * unit;
+  const H = mergeSegs(segs, "h", 1.2 * unit, 3 * unit).filter((q) => q.b - q.a >= min);
+  const V = mergeSegs(segs, "v", 1.2 * unit, 3 * unit).filter((q) => q.b - q.a >= min);
+  const boxes = [];
+  for (let i = 0; i < H.length; i++) for (let j = i + 1; j < H.length; j++) {
+    const t = H[i], b = H[j];
+    if (b.pos - t.pos < min || Math.abs(t.a - b.a) > tol || Math.abs(t.b - b.b) > tol) continue;
+    const xl = (t.a + b.a) / 2, xr = (t.b + b.b) / 2;
+    if (coverage(V, xl, t.pos, b.pos, tol, gap) >= .9 && coverage(V, xr, t.pos, b.pos, tol, gap) >= .9) boxes.push({ r: [xl, t.pos, xr, b.pos], t: Math.max(t.t, b.t) });
+  }
+  for (let i = 0; i < V.length; i++) for (let j = i + 1; j < V.length; j++) {
+    const l = V[i], r = V[j];
+    if (r.pos - l.pos < min || Math.abs(l.a - r.a) > tol || Math.abs(l.b - r.b) > tol) continue;
+    const yt = (l.a + r.a) / 2, yb = (l.b + r.b) / 2;
+    if (coverage(H, yt, l.pos, r.pos, tol, gap) >= .9 && coverage(H, yb, l.pos, r.pos, tol, gap) >= .9) boxes.push({ r: [l.pos, yt, r.pos, yb], t: Math.max(l.t, r.t) });
+  }
+  boxes.sort((p, q) => R.area(q.r) - R.area(p.r));
+  const uniq = [];
+  for (const bx of boxes) if (!uniq.some((u) => u.r.every((v, k) => Math.abs(v - bx.r[k]) <= tol))) uniq.push(bx);
+  return uniq;
+}
+
+/* ink blobs on a coarse grid (ruling lines removed) -> elements + 2-D code finder */
+function inkComponents(pg, rs) {
+  const { W, H, s } = pg, cell = Math.max(2, Math.round(1.5 * s)), gw = Math.ceil(W / cell), gh = Math.ceil(H / cell);
+  const g = new Uint8Array(gw * gh);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = y * W + x; if (rs.dark[i] && !rs.lineMask[i]) g[((y / cell) | 0) * gw + ((x / cell) | 0)] = 1; }
+  const lab = new Int32Array(gw * gh).fill(-1), comps = [], q = [];
+  for (let i = 0; i < g.length; i++) {
+    if (!g[i] || lab[i] >= 0) continue;
+    let x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1, n = 0; q.length = 0; q.push(i); lab[i] = comps.length;
+    while (q.length) {
+      const k = q.pop(), cx = k % gw, cy = (k / gw) | 0; n++;
+      if (cx < x0) x0 = cx; if (cy < y0) y0 = cy; if (cx > x1) x1 = cx; if (cy > y1) y1 = cy;
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+        const nx = cx + dx, ny = cy + dy; if (nx < 0 || ny < 0 || nx >= gw || ny >= gh) continue;
+        const kk = ny * gw + nx; if (g[kk] && lab[kk] < 0) { lab[kk] = comps.length; q.push(kk); }
+      }
+    }
+    const ox = pg.ox || 0, oy = pg.oy || 0;
+    comps.push([ox + x0 * cell / s, oy + y0 * cell / s, ox + (x1 + 1) * cell / s, oy + (y1 + 1) * cell / s]);
+  }
+  return comps;
+}
+function matrixCodes(pg, crop, comps) {
+  let n = 0; const { gray, W, s, unit } = pg, ox = pg.ox || 0, oy = pg.oy || 0;
+  for (const c of comps) {
+    if (!R.contains(crop, c, 1)) continue;
+    const w = R.w(c), h = R.h(c);
+    if (w < 0.4 * 72 * unit || h < 0.4 * 72 * unit || w / h < 0.8 || w / h > 1.25) continue;
+    const x0 = Math.max(0, Math.round((c[0] - ox) * s)), y0 = Math.max(0, Math.round((c[1] - oy) * s)), x1 = Math.min(pg.W, Math.round((c[2] - ox) * s)), y1 = Math.min(pg.H, Math.round((c[3] - oy) * s));
+    let dk = 0, tot = 0, tx = 0, ty = 0;
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+      const v = gray[y * W + x] < 128; dk += v; tot++;
+      if (x > x0 && v !== (gray[y * W + x - 1] < 128)) tx++;
+      if (y > y0 && v !== (gray[(y - 1) * W + x] < 128)) ty++;
+    }
+    const fill = dk / tot;
+    if (fill > .25 && fill < .75 && tx / tot > .02 && ty / tot > .02) n++;
+  }
+  return n;
+}
+/* 1-D barcode: a wide stretch of dense bars whose exact pixel pattern repeats row after row */
+function linearBarcode(pg, crop) {
+  const { gray, W, s } = pg, ox = pg.ox || 0, oy = pg.oy || 0;
+  const x0 = Math.max(0, Math.round((crop[0] - ox) * s)), y0 = Math.max(0, Math.round((crop[1] - oy) * s)), x1 = Math.min(pg.W, Math.round((crop[2] - ox) * s)), y1 = Math.min(pg.H, Math.round((crop[3] - oy) * s));
+  const inch = 72 * s, minLen = 0.8 * inch, maxGap = 0.05 * inch, persist = Math.max(8, Math.round(0.07 * inch));
+  const px = (horiz, a, b) => gray[horiz ? a * W + b : b * W + a] < 128;
+  for (const horiz of [true, false]) {
+    const A0 = horiz ? y0 : x0, A1 = horiz ? y1 : x1, B0 = horiz ? x0 : y0, B1 = horiz ? x1 : y1;
+    let prev = null, run = 0, ref = -1;
+    for (let a = A0; a < A1; a++) {
+      let best = null, st = -1, lastEdge = -1, edges = 0, prevV = false;
+      for (let b = B0; b < B1; b++) {
+        const v = px(horiz, a, b);
+        if (v !== prevV) {
+          if (lastEdge >= 0 && b - lastEdge <= maxGap) edges++;
+          else { if (st >= 0 && lastEdge - st >= minLen && edges >= 20 * (lastEdge - st) / inch && (!best || lastEdge - st > best[1] - best[0])) best = [st, lastEdge]; st = b; edges = 1; }
+          lastEdge = b; prevV = v;
+        }
+      }
+      if (st >= 0 && lastEdge - st >= minLen && edges >= 20 * (lastEdge - st) / inch && (!best || lastEdge - st > best[1] - best[0])) best = [st, lastEdge];
+      if (best && prev && Math.abs(best[0] - prev[0]) < 4 && Math.abs(best[1] - prev[1]) < 4) {
+        run++;
+        if (run >= persist) {
+          let diff = 0; for (let b = best[0]; b < best[1]; b++) diff += px(horiz, a, b) !== px(horiz, ref, b);
+          if (diff / (best[1] - best[0]) < .08) return true;
+          run = 1; ref = a;
+        }
+      } else { run = best ? 1 : 0; ref = a; }
+      prev = best;
+    }
+  }
+  return false;
+}
+/* barcode / 2-D code check on a sharp render of just the label area */
+async function codeScan(pg, crop) {
+  const k = Math.min(7, Math.max(DPI / 72, 1100 / Math.max(R.w(crop), 1)));
+  const vp = pg.page.getViewport({ scale: k }), cw = Math.ceil(R.w(crop) * k), ch = Math.ceil(R.h(crop) * k);
+  const cv = document.createElement("canvas"); cv.width = cw; cv.height = ch;
+  const ctx = cv.getContext("2d", { willReadFrequently: true }); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cw, ch);
+  await pg.page.render({ canvasContext: ctx, viewport: vp, transform: [1, 0, 0, 1, -crop[0] * k, -crop[1] * k] }).promise;
+  const px = ctx.getImageData(0, 0, cw, ch).data, gray = new Uint8Array(cw * ch);
+  for (let i = 0, j = 0; i < gray.length; i++, j += 4) gray[i] = (px[j] * 299 + px[j + 1] * 587 + px[j + 2] * 114) / 1000;
+  const sub = { gray, W: cw, H: ch, s: k, unit: pg.unit, ox: crop[0], oy: crop[1] };
+  const rs = rasterSegments(sub);
+  return { barcode: linearBarcode(sub, crop), matrix: matrixCodes(sub, crop, inkComponents(sub, rs)) };
+}
+function inkBBox(pg, r) {
+  const { gray, W, H, s } = pg;
+  const x0 = Math.max(0, Math.floor(r[0] * s)), y0 = Math.max(0, Math.floor(r[1] * s)), x1 = Math.min(W, Math.ceil(r[2] * s)), y1 = Math.min(H, Math.ceil(r[3] * s));
+  let mx0 = 1e9, my0 = 1e9, mx1 = -1, my1 = -1;
+  for (let y = y0; y < y1; y++) { let c = 0; for (let x = x0; x < x1; x++) if (gray[y * W + x] < 200) { c++; if (x < mx0) mx0 = x; if (x > mx1) mx1 = x; } if (c >= 2) { if (y < my0) my0 = y; my1 = y; } }
+  if (mx1 < 0 || my1 < 0) return null;
+  return [mx0 / s, my0 / s, (mx1 + 1) / s, (my1 + 1) / s];
+}
+function edgeCut(pg, crop) {
+  const { gray, W, H, s, unit } = pg, band = 1.2 * unit, off = 0.4 * unit, cuts = [];
+  const sides = { top: [crop[0], crop[1] - off - band, crop[2], crop[1] - off], bottom: [crop[0], crop[3] + off, crop[2], crop[3] + off + band],
+    left: [crop[0] - off - band, crop[1], crop[0] - off, crop[3]], right: [crop[2] + off, crop[1], crop[2] + off + band, crop[3]] };
+  for (const [name, st] of Object.entries(sides)) {
+    const x0 = Math.max(0, Math.round(st[0] * s)), y0 = Math.max(0, Math.round(st[1] * s)), x1 = Math.min(W, Math.round(st[2] * s)), y1 = Math.min(H, Math.round(st[3] * s));
+    if (x1 - x0 < 1 || y1 - y0 < 1) continue;
+    let ink = 0, tot = 0, edge = 0;
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+      const v = gray[y * W + x] < 110; ink += v; tot++;
+      const atEdge = name === "top" ? y === y1 - 1 : name === "bottom" ? y === y0 : name === "left" ? x === x1 - 1 : x === x0;
+      if (atEdge && v) edge++;
+    }
+    if (edge >= 3 && ink / tot > .004) cuts.push(`graphics beyond ${name} edge`);
+  }
+  return cuts;
+}
+
+/* ---------------- detection strategies ---------------- */
+function barriers(pg, rs, ia) {
+  const bars = rs.dashed.map((d) => ({ y: d.y, x0: d.x0, x1: d.x1 })), pw = pg.vp1.width;
+  for (const a of ia) bars.push({ y: a.rect[1] - .5, x0: a.rect[0] - .25 * pw, x1: a.rect[2] + .25 * pw });
+  return bars;
+}
+function blocked(bars, yFrom, e) {
+  const ey = (e[1] + e[3]) / 2, lo = Math.min(yFrom, ey), hi = Math.max(yFrom, ey);
+  return bars.some((b) => !(b.x1 < e[0] || b.x0 > e[2]) && ((lo < b.y && b.y < hi) || (e[1] < b.y && b.y < e[3])));
+}
+function grow(seed, els, bars, gap) {
+  let r = seed.slice(); const yF = (seed[1] + seed[3]) / 2, used = new Uint8Array(els.length); let ch = true;
+  while (ch) { ch = false; els.forEach((e, i) => { if (used[i] || R.gap(r, e) > gap) return; used[i] = 1; if (blocked(bars, yF, e)) return; r = R.union(r, e); ch = true; }); }
+  return r;
+}
+function detect(pg) {
+  const rs = rasterSegments(pg), lines = buildLines(pg.items), { la, ia } = findAnchors(lines), unit = pg.unit;
+  const comps = inkComponents(pg, rs);
+  const out = [];
+  const boxes = findBoxes(rs.segs, unit), cands = [];
+  for (const bx of boxes) { const a = anchorsIn(bx.r, la), i = anchorsIn(bx.r, ia); if (labelLike(a, i)) cands.push({ r: bx.r, t: bx.t, a }); }
+  for (const c of cands) if (!out.some((o) => R.hits(o.r, c.r))) out.push({ r: c.r, t: c.t, a: c.a, method: "PDF border", border: true });
+  if (!out.length) {
+    const pageA = pg.vp1.width * pg.vp1.height;
+    const els = lines.filter((l) => !ia.some((x) => x.rect === l.rect)).map((l) => l.rect).concat(comps.filter((c) => R.area(c) < .5 * pageA), rs.segs.map((q) => q.o === "h" ? [q.a, q.pos - q.t / 2, q.b, q.pos + q.t / 2] : [q.pos - q.t / 2, q.a, q.pos + q.t / 2, q.b]));
+    const bars = barriers(pg, rs, ia), regions = [];
+    for (const sd of la.filter((a) => LABEL_ANCHORS[a.name].strong)) {
+      if (regions.some((r) => inside(r, R.center(sd.rect), 0))) continue;
+      regions.push(grow(sd.rect, els, bars, 8 * unit));
+    }
+    let merged = true;
+    while (merged) { merged = false; outer: for (let i = 0; i < regions.length; i++) for (let j = i + 1; j < regions.length; j++) if (R.hits(regions[i], regions[j])) { regions[i] = R.union(regions[i], regions[j]); regions.splice(j, 1); merged = true; break outer; } }
+    for (const r of regions) { const a = anchorsIn(r, la), i = anchorsIn(r, ia); if (labelLike(a, i) && R.w(r) > 60 * unit && R.h(r) > 60 * unit) out.push({ r, t: 0, a, method: "Keyword region", border: false }); }
+  }
+  // reading order: rows then left-to-right
+  out.sort((p, q) => p.r[1] - q.r[1]);
+  const rows = [];
+  for (const d of out) { const row = rows.find((rw) => { const ref = rw[0].r, ov = Math.min(ref[3], d.r[3]) - Math.max(ref[1], d.r[1]); return ov > .5 * Math.min(R.h(ref), R.h(d.r)); }); row ? row.push(d) : rows.push([d]); }
+  const ordered = rows.flatMap((rw) => rw.sort((p, q) => p.r[0] - q.r[0]));
+  return { dets: ordered, la, ia, lines, comps, rs };
+}
+
+function coreRect(pg, det) {
+  let r = det.r.slice();
+  if (det.border) r = R.grow(r, Math.max(det.t, .5) / 2);
+  const ink = inkBBox(pg, r);
+  if (ink) r = [Math.max(r[0], ink[0]), Math.max(r[1], ink[1]), Math.min(r[2], ink[2]), Math.min(r[3], ink[3])];
+  return r;
+}
+function padCrop(core, pad, pg) {
+  const w = Math.max(R.w(core), 1), h = Math.max(R.h(core), 1);
+  const sc = Math.max(Math.min(OUT_W / w, OUT_H / h), Math.min(OUT_W / h, OUT_H / w));
+  const p = pad / sc, r = R.grow(core, p);
+  return [Math.max(0, r[0]), Math.max(0, r[1]), Math.min(pg.vp1.width, r[2]), Math.min(pg.vp1.height, r[3])];
+}
+function orientation(lines, crop) {
+  const v = { 0: 0, 90: 0, 180: 0, 270: 0 };
+  for (const l of lines) { if (!inside(crop, R.center(l.rect), 0)) continue; const [dx, dy] = l.dir; const k = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 0 : 180) : (dy > 0 ? 90 : 270); v[k] += l.text.length; }
+  const tot = v[0] + v[90] + v[180] + v[270]; if (!tot) return 0;
+  const best = +Object.keys(v).reduce((a, b) => (v[a] >= v[b] ? a : b));
+  return v[best] >= .6 * tot ? best : 0;
+}
+function vUp(a, crop, o) {
+  const [x0, y0, x1, y1] = a.rect, w = R.w(crop), h = R.h(crop);
+  if (o === 180) return [(crop[3] - y1) / h, (y0 - crop[1]) / h];
+  if (o === 90) return [(crop[2] - x1) / w, (x0 - crop[0]) / w];
+  if (o === 270) return [(x0 - crop[0]) / w, (crop[2] - x1) / w];
+  return [(y0 - crop[1]) / h, (crop[3] - y1) / h];
+}
+function score(pg, det, crop, ctx, others, orient, codes) {
+  const parts = {}, pen = {}, reasons = [];
+  const la = anchorsIn(crop, ctx.la), names = distinct(la);
+  const found = CORE.filter((k) => names.has(k));
+  parts.keywords = 30 * Math.min(1, found.length / 8);
+  parts.border = det.border ? 20 : det.method === "Manual" ? 0 : 8;
+  const bc = codes.barcode, mc = codes.matrix;
+  parts.barcode = bc ? 15 : 0; if (!bc) reasons.push("Barcode nahi mila");
+  parts.qr = mc ? 10 : 0; if (!mc) reasons.push("QR / 2-D code nahi mila");
+  const top = la.some((a) => ["order_id", "reg", "payment"].includes(a.name) && vUp(a, crop, orient)[0] < .3);
+  const bot = la.some((a) => ["not_for_resale", "printed_at"].includes(a.name) && vUp(a, crop, orient)[1] < .25);
+  parts.structure = (top ? 5 : 0) + (bot ? 5 : 0) + (names.has("awb") || names.has("ship_address") ? 5 : 0);
+  if (!top) reasons.push("Header (Order ID / REG) upar nahi mila"); if (!bot) reasons.push("'Not for resale' footer neeche nahi mila");
+  const invIn = anchorsIn(crop, ctx.ia);
+  parts.invoice = invIn.length ? 0 : ctx.ia.length ? 10 : 7;
+  if (invIn.length) { pen.invoice_inside = 40; reasons.push("Tax-invoice text crop ke andar hai"); }
+  const cuts = edgeCut(pg, crop);
+  for (const it of pg.items) { if (R.hits(it.rect, crop) && !R.contains(crop, it.rect, .6) && R.area(R.inter(it.rect, crop)) > .15 * R.area(it.rect)) { cuts.push(it.str); if (cuts.length > 5) break; } }
+  if (cuts.length) { pen.cut = 20; reasons.push("Crop edge content ko kaat raha hai: " + cuts.slice(0, 3).join(", ")); }
+  const orphans = ctx.la.filter((a) => LABEL_ANCHORS[a.name].strong && !R.hits(crop, a.rect) && !others.some((o) => R.hits(o, a.rect)) && R.gap(crop, a.rect) < 30 * pg.unit);
+  if (orphans.length) { pen.outside = 15; reasons.push("Label ka kuch text crop ke bahar hai"); }
+  let total = Object.values(parts).reduce((a, b) => a + b, 0) - Object.values(pen).reduce((a, b) => a + b, 0);
+  total = Math.max(0, Math.min(100, total));
+  return { score: Math.round(total), parts, pen, reasons, found };
+}
+const orderId = (anchors) => { for (const a of anchors) { const m = a.text.match(/\b[O0]\s?D\s?\d{10,}\b/); if (m) return m[0].replace(/\s/g, "").replace(/^0/, "O"); } return ""; };
+
+/* ---------------- app state ---------------- */
+const S = { files: [], labels: [], busy: false, out: null, dl: null, seq: 0 };
+const settings = () => ({ thr: +$("sThr").value || 0, margin: Math.max(0, +$("sMar").value || 0), pad: Math.max(0, +$("sPad").value || 0), rotate: $("sRot").checked, low: $("sLow").checked });
+function status(l) { if (l.status === "failed" || l.status === "manual") return l.status; return l.conf >= settings().thr ? "detected" : "review"; }
+function included(l) { const st = status(l); if (st === "failed") return false; if (l.approved !== null) return l.approved; return st === "detected" || st === "manual" || settings().low; }
+
+function toast(msg, ms = 3200) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => (t.hidden = true), ms); }
+function progress(txt, done, tot) { $("prog").hidden = !txt; $("progTxt").textContent = txt || ""; $("progBar").style.width = tot ? `${Math.max(3, 100 * done / tot)}%` : "0"; }
+
+async function toPdfBytes(file) {
+  const buf = new Uint8Array(await file.arrayBuffer());
+  if (/\.(png|jpe?g)$/i.test(file.name)) {
+    const doc = await PDFLib.PDFDocument.create();
+    const img = /\.png$/i.test(file.name) ? await doc.embedPng(buf) : await doc.embedJpg(buf);
+    const k = 842 / Math.max(img.width, img.height), pg = doc.addPage([img.width * k, img.height * k]);
+    pg.drawImage(img, { x: 0, y: 0, width: img.width * k, height: img.height * k });
+    return await doc.save();
+  }
+  return buf;
+}
+
+function thumb(pg, crop, orient) {
+  const s = pg.s, sx = crop[0] * s, sy = crop[1] * s, sw = R.w(crop) * s, sh = R.h(crop) * s;
+  let rot = orient; let w = rot % 180 ? sh : sw, h = rot % 180 ? sw : sh;
+  if (settings().rotate && w > h * 1.05) { rot = (rot + 90) % 360; [w, h] = [h, w]; }
+  const c = document.createElement("canvas"); c.width = 240; c.height = 360;
+  const ctx = c.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, 240, 360);
+  const m = settings().margin / OUT_W * 240, k = Math.min((240 - 2 * m) / w, (360 - 2 * m) / h);
+  ctx.translate(120, 180); ctx.rotate(-rot * Math.PI / 180);
+  ctx.drawImage(pg.canvas, sx, sy, sw, sh, -sw * k / 2, -sh * k / 2, sw * k, sh * k);
+  return c.toDataURL("image/png");
+}
+
+async function makeLabel(entry, fidx, pno, pg, ctx, det, idx, others, manual) {
+  const core = manual ? det.r.slice() : coreRect(pg, det);
+  const crop = manual ? det.r.slice() : padCrop(core, settings().pad, pg);
+  const orient = orientation(ctx.lines, crop);
+  const sc = score(pg, det, crop, ctx, others, orient, await codeScan(pg, crop));
+  return { uid: ++S.seq, fidx, file: entry.name, pno, idx, status: manual ? "manual" : "auto", conf: sc.score, sc, method: det.method,
+    core, crop, orient, rotate: pg.rotate, vpw: pg.vp1.width, vph: pg.vp1.height, order: orderId(anchorsIn(crop, ctx.la)),
+    thumb: thumb(pg, crop, orient), approved: manual ? true : null, out: null };
+}
+
+async function analyse(entry, fidx, pno) {
+  const pg = await renderPage(entry, pno), ctx = detect(pg);
+  if (!ctx.dets.length) return [{ uid: ++S.seq, fidx, file: entry.name, pno, idx: 0, status: "failed", conf: 0, sc: { reasons: ["Is page par shipping label detect nahi hua"] }, method: "—", crop: null, approved: null }];
+  const cores = ctx.dets.map((d) => padCrop(coreRect(pg, d), settings().pad, pg));
+  const out = [];
+  for (let i = 0; i < ctx.dets.length; i++) out.push(await makeLabel(entry, fidx, pno, pg, ctx, ctx.dets[i], i, cores.filter((_, j) => j !== i), false));
+  // safeguard: the page shows more labels than were detected -> never skip silently
+  const counts = {};
+  for (const a of ctx.la) if (LABEL_ANCHORS[a.name].unique && !cores.some((c) => inside(c, R.center(a.rect)))) counts[a.name] = (counts[a.name] || 0) + 1;
+  const missing = Math.max(0, ...Object.values(counts).filter((v, _, arr) => arr.filter((x) => x >= v).length >= 2));
+  if (missing > 0) out.push({ uid: ++S.seq, fidx, file: entry.name, pno, idx: out.length, status: "failed", conf: 0, method: "—", crop: null, approved: null,
+    sc: { reasons: [`Is page par ${missing} aur label dikh ${missing > 1 ? "rahe hain jo" : "raha hai jo"} detect nahi ${missing > 1 ? "hue" : "hua"}. Review Page mein manual crop karein.`] } });
+  return out;
+}
+
+async function handleFiles(list) {
+  if (S.busy) return;
+  const files = [...list].filter((f) => /\.(pdf|png|jpe?g)$/i.test(f.name));
+  if (!files.length) return toast("Sirf PDF (ya PNG/JPG) files daalein");
+  if (!window.pdfjsLib || !window.PDFLib) return toast("PDF engine load nahi hua. Page reload karein.", 6000);
+  S.busy = true; S.files = []; S.labels = []; S.out = null; $("sumCard").hidden = false; $("labCard").hidden = true; render();
+  let totalPages = 0;
+  for (const f of files) {
+    const entry = { name: f.name, pages: 0, error: "" };
+    try { entry.bytes = await toPdfBytes(f); entry.pdf = await pdfjsLib.getDocument({ data: entry.bytes.slice(0) }).promise; entry.pages = entry.pdf.numPages; totalPages += entry.pages; }
+    catch (e) { entry.error = /password/i.test(String(e)) ? "Password protected" : "Open nahi hui"; }
+    S.files.push(entry);
+  }
+  let done = 0;
+  for (let fi = 0; fi < S.files.length; fi++) {
+    const e = S.files[fi]; if (e.error) continue;
+    for (let p = 0; p < e.pages; p++) {
+      progress(`Detecting labels… ${done + 1}/${totalPages}`, done, totalPages);
+      try { S.labels.push(...await analyse(e, fi, p)); }
+      catch (err) { S.labels.push({ uid: ++S.seq, fidx: fi, file: e.name, pno: p, idx: 0, status: "failed", conf: 0, sc: { reasons: ["Page read error"] }, method: "—", crop: null, approved: null }); }
+      done++; render();
+      await new Promise((r) => setTimeout(r, 0));
+    }
+  }
+  progress("", 0, 0); S.busy = false; render();
+}
+
+/* ---------------- 4x6 output with pdf-lib (original content, not screenshots) ---------------- */
+function toUser(pgInfo, r, vpTransform) {
+  // viewport (scale 1, rotated, y-down) -> PDF user space via inverse of viewport transform
+  const [a, b, c, d, e, f] = vpTransform, det = a * d - b * c;
+  const inv = (x, y) => [(d * (x - e) - c * (y - f)) / det, (-b * (x - e) + a * (y - f)) / det];
+  const pts = [inv(r[0], r[1]), inv(r[2], r[1]), inv(r[0], r[3]), inv(r[2], r[3])];
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  return { left: Math.min(...xs), bottom: Math.min(...ys), right: Math.max(...xs), top: Math.max(...ys) };
+}
+async function buildOutputs() {
+  const st = settings(), chosen = S.labels.filter(included);
+  if (!chosen.length) return toast("Output mein koi label nahi hai");
+  S.busy = true; render();
+  try {
+    const out = await PDFLib.PDFDocument.create(), libDocs = {};
+    out.setTitle("4x6 Shipping Labels"); out.setCreator("Pawan Flipkart Label Cropper Automatically"); out.setProducer("Pawan Flipkart Label Cropper Automatically");
+    for (let n = 0; n < chosen.length; n++) {
+      const l = chosen[n], e = S.files[l.fidx];
+      progress(`Building 4×6 PDF… ${n + 1}/${chosen.length}`, n, chosen.length);
+      if (!libDocs[l.fidx]) libDocs[l.fidx] = await PDFLib.PDFDocument.load(e.bytes, { ignoreEncryption: true });
+      const srcPage = libDocs[l.fidx].getPage(l.pno);
+      const pjPage = await e.pdf.getPage(l.pno + 1), vp1 = pjPage.getViewport({ scale: 1 });
+      const crop = l.status === "manual" ? l.crop : padCrop(l.core, st.pad, { vp1 });
+      const bb = toUser(null, crop, vp1.transform);
+      const emb = await out.embedPage(srcPage, bb);
+      let W = bb.right - bb.left, H = bb.top - bb.bottom;
+      let theta = ((360 - (l.rotate || 0)) % 360 + l.orient) % 360;
+      let w = theta % 180 ? H : W, h = theta % 180 ? W : H;
+      if (st.rotate && w > h * 1.05) { theta = (theta + 90) % 360; [w, h] = [h, w]; }
+      const k = Math.min((OUT_W - 2 * st.margin) / w, (OUT_H - 2 * st.margin) / h);
+      const tw = w * k, th = h * k, tx = (OUT_W - tw) / 2, ty = (OUT_H - th) / 2;
+      const dw = W * k, dh = H * k;
+      const pos = { 0: [tx, ty], 90: [tx + tw, ty], 180: [tx + tw, ty + th], 270: [tx, ty + th] }[theta];
+      const page = out.addPage([OUT_W, OUT_H]);
+      page.drawPage(emb, { x: pos[0], y: pos[1], width: dw, height: dh, rotate: PDFLib.degrees(theta) });
+      l.out = { page: n + 1, inches: [(tw / 72).toFixed(2), (th / 72).toFixed(2)] };
+      await new Promise((r) => setTimeout(r, 0));
+    }
+    for (const l of S.labels) if (!chosen.includes(l)) l.out = null;
+    const bytes = await out.save();
+    S.out = { bytes, count: chosen.length, chosen };
+    progress("", 0, 0); toast(`Done: ${chosen.length} label page(s) ready`);
+  } catch (err) { progress("", 0, 0); toast("Processing fail hua: " + (err && err.message || err), 7000); }
+  S.busy = false; render();
+}
+const fileName = () => { let n = $("sName").value.trim() || defaultName(); n = n.replace(/[^\w.\- ]+/g, "_"); return /\.pdf$/i.test(n) ? n : n + ".pdf"; };
+const defaultName = () => { const d = new Date(), p = (x) => String(x).padStart(2, "0"); return `Flipkart_4x6_Labels_${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}.pdf`; };
+async function save(filename, data) {
+  if (!S.dl) {   // normal website (e.g. GitHub Pages): plain browser download
+    const blob = data instanceof Blob ? data : new Blob([data], { type: /\.zip$/i.test(filename) ? "application/zip" : "application/pdf" });
+    const url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000); toast("Downloaded: " + filename); return;
+  }
+  try { await S.dl.save({ filename, data }); toast("Saved: " + filename); }
+  catch (e) { if (e && e.code === "declined") toast("Download cancel kiya"); else if (e && e.code === "rate_limited") toast("Ek download already open hai, thoda ruk kar try karein"); else toast("Download nahi hua: " + (e && e.message || e.code || e), 6000); }
+}
+async function zipAll() {
+  if (!S.out) return;
+  const src = await PDFLib.PDFDocument.load(S.out.bytes), zip = new JSZip();
+  for (let i = 0; i < S.out.chosen.length; i++) {
+    const one = await PDFLib.PDFDocument.create(); const [pg] = await one.copyPages(src, [i]); one.addPage(pg);
+    const l = S.out.chosen[i], tag = l.order || `${l.file.replace(/\.[^.]+$/, "").replace(/[^\w-]+/g, "_")}_p${l.pno + 1}${l.idx ? "_" + (l.idx + 1) : ""}`;
+    zip.file(`${String(i + 1).padStart(3, "0")}_${tag}.pdf`, await one.save());
+  }
+  const data = await zip.generateAsync({ type: "uint8array" });
+  await save(fileName().replace(/\.pdf$/i, "") + "_individual.zip", data);
+}
+
+/* ---------------- rendering the UI ---------------- */
+function pillFor(st) { return { detected: ["p-ok", "Detected"], review: ["p-rev", "Review"], failed: ["p-bad", "Not found"], manual: ["p-man", "Manual crop"] }[st]; }
+function render() {
+  const st = settings();
+  $("fBody").innerHTML = S.files.map((f, fi) => {
+    const ls = S.labels.filter((l) => l.fidx === fi), det = ls.filter((l) => l.status !== "failed").length, rev = ls.filter((l) => ["review", "failed"].includes(status(l)) && l.approved === null).length;
+    const analysed = ls.length && new Set(ls.map((l) => l.pno)).size === f.pages;
+    const pill = f.error ? `<span class="pill p-bad">${esc(f.error)}</span>` : !analysed ? `<span class="pill p-busy">Analysing…</span>` : rev ? `<span class="pill p-rev">${rev} need review</span>` : `<span class="pill p-ok">Ready</span>`;
+    return `<tr><td>${esc(f.name)}</td><td>${f.pages}</td><td>${det}</td><td>${rev}</td><td>${pill}</td></tr>`;
+  }).join("");
+  const tot = { pages: S.files.reduce((a, f) => a + f.pages, 0), det: S.labels.filter((l) => l.status !== "failed").length, rev: S.labels.filter((l) => ["review", "failed"].includes(status(l)) && l.approved === null).length, inc: S.labels.filter(included).length };
+  $("fFoot").innerHTML = S.files.length > 1 ? `<tr><td>Total (${S.files.length} files)</td><td>${tot.pages}</td><td>${tot.det}</td><td>${tot.rev}</td><td></td></tr>` : "";
+  $("warns").innerHTML = S.labels.filter((l) => ["review", "failed"].includes(status(l)) && l.approved === null).map((l) => {
+    const where = `${S.files.length > 1 ? esc(l.file) + " · " : ""}Page ${l.pno + 1}`;
+    const msg = l.status === "failed" ? (l.idx > 0 ? `${where} par aur label dikh rahe hain jo detect nahi hue.` : `No shipping label detected on ${where}.`) : `Label detection confidence is low for ${where} (${l.conf}%).`;
+    return `<div class="warn ${l.status === "failed" ? "bad" : ""}"><span>${msg}</span><button class="btn sm" type="button" data-review="${l.fidx}:${l.pno}">Review Page</button></div>`;
+  }).join("");
+  $("procBtn").disabled = S.busy || !tot.inc;
+  $("procBtn").textContent = S.busy && S.labels.length ? "Working…" : "Process Labels";
+  $("dlRow").hidden = !S.out;
+  $("procTxt").innerHTML = S.out ? `<span class="done">Processed: ${S.out.count}/${tot.det}</span>` : S.labels.length ? `${tot.inc} label(s) 4×6 pages par jayenge` : "";
+  $("labCard").hidden = !S.labels.length;
+  $("labCount").textContent = S.labels.length ? `(${tot.det} detected · ${tot.inc} in output)` : "";
+  $("labGrid").innerHTML = S.labels.map((l, i) => {
+    const s2 = status(l), [pc, pt] = pillFor(s2), inc = included(l);
+    const cls = s2 === "failed" ? "bad" : s2 === "review" && l.approved === null ? "rev" : !inc ? "off" : "";
+    const reasons = (l.sc.reasons || []).filter((r) => s2 !== "detected" || /andar|kaat|bahar/.test(r));
+    const incBtn = s2 === "failed" ? "" : inc ? `<button class="btn sm" type="button" data-inc="${l.uid}" data-v="0">Exclude</button>` : `<button class="btn sm" type="button" data-inc="${l.uid}" data-v="1">${s2 === "review" ? "Approve" : "Include"}</button>`;
+    return `<article class="lc ${cls}"><div class="th">${l.thumb ? `<img alt="Label ${i + 1} preview" src="${l.thumb}">` : `<div class="none">${l.idx > 0 ? "Is page ke baaki label detect nahi hue" : "Is page par shipping label nahi mila"}</div>`}</div>
+      <div class="lb"><div class="row"><strong>#${i + 1} · Page ${l.pno + 1}${l.idx ? " (" + (l.idx + 1) + ")" : ""}</strong><span class="pill ${pc}">${pt}</span></div>
+      <div class="row"><span class="muted">Shipping Label Detection</span><span class="conf">${s2 === "failed" ? "—" : l.conf + "%"}</span></div>
+      <div class="meta">${esc(l.order || l.file)} · ${esc(l.method)}${l.out ? ` · ${l.out.inches[0]}×${l.out.inches[1]} in` : ""}</div>
+      ${reasons.length ? `<ul class="rs">${reasons.slice(0, 3).map((r) => `<li>${esc(r)}</li>`).join("")}</ul>` : ""}
+      <div class="lbtn"><button class="btn sm" type="button" data-review="${l.fidx}:${l.pno}">Review Page</button>${incBtn}</div></div></article>`;
+  }).join("");
+}
+
+/* ---------------- review modal with manual crop ---------------- */
+const M = { f: 0, p: 0, pg: null, k: 1, drag: null, rect: null };
+async function openReview(f, p) {
+  M.f = f; M.p = p; M.rect = null; $("mSave").disabled = true; $("dbox").hidden = true; $("modal").hidden = false;
+  $("mTitle").textContent = `${S.files[f].name} — Page ${p + 1}`;
+  const pg = await renderPage(S.files[f], p); M.pg = pg;
+  const cv = $("pvCanvas"), maxH = Math.min(window.innerHeight * .78, 900), k = Math.min(1, maxH / pg.H);
+  cv.width = Math.round(pg.W * k); cv.height = Math.round(pg.H * k);
+  const ctx = cv.getContext("2d"); ctx.drawImage(pg.canvas, 0, 0, cv.width, cv.height); M.k = k;
+  const labs = S.labels.filter((l) => l.fidx === f && l.pno === p);
+  const col = { detected: "#17804a", review: "#d98a00", manual: "#1f63c7" };
+  labs.forEach((l, i) => { if (!l.crop) return; const c = l.status === "manual" ? l.crop : padCrop(l.core, settings().pad, pg); const z = pg.s * k; ctx.strokeStyle = col[status(l)] || "#bf3030"; ctx.lineWidth = 3; ctx.strokeRect(c[0] * z, c[1] * z, R.w(c) * z, R.h(c) * z); ctx.fillStyle = ctx.strokeStyle; ctx.font = "600 14px sans-serif"; ctx.fillText(`#${i + 1} ${l.conf}%`, c[0] * z + 4, Math.max(14, c[1] * z - 5)); });
+  $("mInfo").innerHTML = `<b>Is page par</b>` + (labs.map((l, i) => `<div class="small" style="margin-top:6px">#${i + 1} <span class="pill ${pillFor(status(l))[0]}">${pillFor(status(l))[1]}${l.status === "failed" ? "" : " · " + l.conf + "%"}</span>${(l.sc.reasons || []).length ? `<ul class="rs">${l.sc.reasons.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>` : ""}${l.status !== "failed" ? `<div class="lbtn"><button class="btn sm" type="button" data-inc="${l.uid}" data-v="1">Approve</button><button class="btn sm" type="button" data-inc="${l.uid}" data-v="0">Exclude</button></div>` : ""}</div>`).join("") || `<div class="muted small">Kuch detect nahi hua.</div>`);
+  $("mTarget").innerHTML = `<option value="">Naya label add karo</option>` + labs.filter((l) => l.status !== "failed").map((l, i) => `<option value="${l.uid}">Label #${i + 1} replace karo</option>`).join("");
+}
+function relPos(ev) { const r = $("pvCanvas").getBoundingClientRect(); return [Math.max(0, Math.min(r.width, ev.clientX - r.left)), Math.max(0, Math.min(r.height, ev.clientY - r.top)), r]; }
+function drawBox(a, b) { const d = $("dbox"); d.hidden = false; d.style.left = Math.min(a[0], b[0]) + "px"; d.style.top = Math.min(a[1], b[1]) + "px"; d.style.width = Math.abs(b[0] - a[0]) + "px"; d.style.height = Math.abs(b[1] - a[1]) + "px"; }
+$("pv").addEventListener("pointerdown", (e) => { if (!M.pg) return; e.preventDefault(); $("pv").setPointerCapture(e.pointerId); M.drag = relPos(e); drawBox(M.drag, M.drag); });
+$("pv").addEventListener("pointermove", (e) => { if (M.drag) drawBox(M.drag, relPos(e)); });
+$("pv").addEventListener("pointerup", (e) => {
+  if (!M.drag) return; const a = M.drag, b = relPos(e), rect = b[2]; M.drag = null;
+  const k = M.pg.W / rect.width / M.pg.s;  // display px -> points
+  const r = [Math.min(a[0], b[0]) * k, Math.min(a[1], b[1]) * k, Math.max(a[0], b[0]) * k, Math.max(a[1], b[1]) * k];
+  if (R.w(r) < 20 || R.h(r) < 20) { $("dbox").hidden = true; M.rect = null; $("mSave").disabled = true; return; }
+  M.rect = r; $("mSave").disabled = false;
+});
+$("mSave").addEventListener("click", async () => {
+  if (!M.rect || !M.pg) return;
+  const ctx = detect(M.pg), repl = +$("mTarget").value || 0, entry = S.files[M.f];
+  const pageLabs = S.labels.filter((l) => l.fidx === M.f && l.pno === M.p);
+  let idx, at;
+  if (repl) { const old = S.labels.find((l) => l.uid === repl); idx = old.idx; at = S.labels.indexOf(old); S.labels.splice(at, 1); }
+  else { const lastAt = S.labels.indexOf(pageLabs[pageLabs.length - 1]); S.labels = S.labels.filter((l) => !(l.fidx === M.f && l.pno === M.p && l.status === "failed")); idx = pageLabs.filter((l) => l.status !== "failed").length; at = Math.min(S.labels.length, lastAt + 1 - (pageLabs.some((l) => l.status === "failed") ? 1 : 0)); }
+  const lab = await makeLabel(entry, M.f, M.p, M.pg, ctx, { r: M.rect, t: 0, method: "Manual", border: false }, idx, [], true);
+  S.labels.splice(Math.max(0, at), 0, lab);
+  S.out = null; render(); await openReview(M.f, M.p); toast("Manual crop save ho gaya");
+});
+$("mClose").addEventListener("click", () => { $("modal").hidden = true; M.pg = null; });
+$("modal").addEventListener("click", (e) => { if (e.target.id === "modal") { $("modal").hidden = true; M.pg = null; } });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("modal").hidden) { $("modal").hidden = true; M.pg = null; } });
+
+/* ---------------- wiring ---------------- */
+const drop = $("drop"), input = $("fileIn");
+drop.addEventListener("click", () => input.click());
+drop.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } });
+$("pick").addEventListener("click", (e) => { e.stopPropagation(); input.click(); });
+input.addEventListener("change", () => { if (input.files.length) handleFiles(input.files); input.value = ""; });
+["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("on"); }));
+["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("on"); }));
+drop.addEventListener("drop", (e) => handleFiles(e.dataTransfer.files));
+$("procBtn").addEventListener("click", buildOutputs);
+$("reBtn").addEventListener("click", buildOutputs);
+$("dlPdf").addEventListener("click", () => S.out && save(fileName(), new Blob([S.out.bytes], { type: "application/pdf" })));
+$("dlZip").addEventListener("click", zipAll);
+$("printBtn").addEventListener("click", () => {
+  if (!S.out) return;
+  const url = URL.createObjectURL(new Blob([S.out.bytes], { type: "application/pdf" }));
+  let f = $("printFrame");
+  if (!f) { f = document.createElement("iframe"); f.id = "printFrame"; f.title = "print"; f.style.cssText = "position:fixed;width:0;height:0;border:0;right:0;bottom:0"; document.body.appendChild(f); }
+  f.onload = () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { window.open(url, "_blank"); } };
+  f.src = url;
+});
+$("clearBtn").addEventListener("click", () => { S.files = []; S.labels = []; S.out = null; $("sumCard").hidden = true; $("labCard").hidden = true; toast("Cleared"); });
+["sThr", "sLow", "sPad", "sMar", "sRot"].forEach((id) => $(id).addEventListener("change", () => { S.out = null; render(); }));
+document.addEventListener("click", (e) => {
+  const rv = e.target.closest("[data-review]"); if (rv) { const [f, p] = rv.dataset.review.split(":").map(Number); openReview(f, p); return; }
+  const ib = e.target.closest("[data-inc]"); if (ib) { const l = S.labels.find((x) => x.uid === +ib.dataset.inc); if (l) { l.approved = ib.dataset.v === "1"; S.out = null; render(); toast(l.approved ? "Label output mein jayega" : "Label exclude kiya"); if (!$("modal").hidden) openReview(M.f, M.p); } }
+});
+$("sName").value = defaultName();
+// inside claude.ai the page uses the downloads capability; on a normal website it uses plain downloads + Print
+const inClaude = !!(window.claude && window.claude.use);
+$("printBtn").hidden = inClaude;
+(async () => { try { if (inClaude) S.dl = await claude.use("downloads"); } catch (e) { S.dl = null; } })();
+</script>
+
+</body>
+</html>
