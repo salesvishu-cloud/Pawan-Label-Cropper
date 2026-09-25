@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pawan Flipkart Label Cropper Automatically</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='3' width='20' height='26' rx='3' fill='%231f3a8a'/%3E%3Crect x='10' y='8' width='12' height='2' fill='white'/%3E%3Crect x='10' y='12' width='2' height='10' fill='white'/%3E%3Crect x='13' y='12' width='1' height='10' fill='white'/%3E%3Crect x='15' y='12' width='2' height='10' fill='white'/%3E%3Crect x='18' y='12' width='1' height='10' fill='white'/%3E%3Crect x='20' y='12' width='2' height='10' fill='white'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 32 32"><rect x="6" y="3" width="20" height="26" rx="3"/><g fill="#fff"><rect x="10" y="8" width="12" height="2"/><rect x="10" y="12" width="2" height="10"/><rect x="13" y="12" width="1" height="10"/><rect x="15" y="12" width="2" height="10"/><rect x="18" y="12" width="1" height="10"/><rect x="20" y="12" width="2" height="10"/></g></svg>
+    </div>
+    <div>
+      <h1 id="appName">Pawan Flipkart Label Cropper Automatically</h1>
+      <p class="sub">FLIPKART LABEL CROPPER · Auto-detect shipping label → exact 4 × 6 inch PDF</p>
+    </div>
+  </div>
+  <div class="chips" id="envChips"></div>
+</header>
+
+<main>
+  <!-- Upload -->
+  <section class="card" id="uploadCard">
+    <div id="dropzone" class="dropzone" tabindex="0">
+      <input type="file" id="fileInput" accept=".pdf,application/pdf,.png,.jpg,.jpeg" multiple hidden>
+      <svg class="dz-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <button class="btn primary big" id="pickBtn" type="button">Upload Flipkart PDF</button>
+      <div class="dz-or">or</div>
+      <div class="dz-text">Drag &amp; Drop PDF Here</div>
+      <div class="dz-hint">One or many PDFs · every page is analysed · files are processed on this computer only</div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <section class="card hidden" id="summaryCard">
+    <div class="card-head">
+      <h2>Uploaded files</h2>
+      <button class="btn ghost" id="clearBtn" type="button">Clear / New batch</button>
+    </div>
+    <div id="progressWrap" class="progress-wrap hidden">
+      <div class="progress-label" id="progressLabel">Working…</div>
+      <div class="progress"><div class="bar" id="progressBar"></div></div>
+    </div>
+    <table class="files">
+      <thead><tr><th>Original PDF</th><th>Pages</th><th>Labels Detected</th><th>Needs Review</th><th>Status</th></tr></thead>
+      <tbody id="filesBody"></tbody>
+      <tfoot id="filesFoot"></tfoot>
+    </table>
+    <div id="warnings" class="warnings"></div>
+
+    <details class="settings" id="settingsBox">
+      <summary>Output settings</summary>
+      <div class="grid">
+        <label>Output filename
+          <input type="text" id="setFilename">
+        </label>
+        <label>Confidence threshold (%)
+          <input type="number" id="setThreshold" min="0" max="100" step="1">
+        </label>
+        <label>Page margin on 4×6 (pt)
+          <input type="number" id="setMargin" min="0" max="36" step="0.5">
+        </label>
+        <label>Padding around label (pt)
+          <input type="number" id="setPadding" min="0" max="20" step="0.5">
+        </label>
+        <label class="check"><input type="checkbox" id="setRotate"> Rotate landscape labels to fit</label>
+        <label class="check"><input type="checkbox" id="setStrip"> Remove hidden invoice data from output</label>
+        <label class="check"><input type="checkbox" id="setIncludeLow"> Include low-confidence labels without review</label>
+      </div>
+      <p class="muted small">Output page is always exactly 4 × 6 in (288 × 432 pt). Labels are scaled proportionally and centred — never stretched.</p>
+    </details>
+
+    <div class="actions">
+      <button class="btn primary big" id="processBtn" type="button" disabled>Process Labels</button>
+      <span id="processedText" class="processed"></span>
+    </div>
+    <div class="actions hidden" id="downloadRow">
+      <a class="btn success big" id="dlPdf" href="#">Download 4×6 PDF</a>
+      <a class="btn" id="dlZip" href="#">Download Individual Labels (ZIP)</a>
+      <button class="btn" id="printBtn" type="button">Print</button>
+      <button class="btn ghost" id="reprocessBtn" type="button">Reprocess</button>
+    </div>
+  </section>
+
+  <!-- Labels -->
+  <section class="card hidden" id="labelsCard">
+    <div class="card-head">
+      <h2>Labels <span class="count" id="labelsCount"></span></h2>
+      <div class="legend"><span class="dot ok"></span>Detected <span class="dot review"></span>Review <span class="dot manual"></span>Manual <span class="dot fail"></span>Not found</div>
+    </div>
+    <div class="grid-labels" id="labelsGrid"></div>
+  </section>
+</main>
+
+<!-- Review modal -->
+<div class="modal hidden" id="modal" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modalTitle">Review page</h3>
+      <button class="btn ghost" id="modalClose" type="button" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="page-view" id="pageView">
+        <img id="pageImg" alt="Page preview">
+        <div id="drawBox" class="draw-box hidden"></div>
+      </div>
+      <aside class="side">
+        <div id="pageLabels"></div>
+        <div class="side-block">
+          <h4>Re-detect automatically</h4>
+          <div class="btn-col">
+            <button class="btn" data-redetect="" type="button">Auto (all methods)</button>
+            <button class="btn" data-redetect="text" type="button">Keyword region</button>
+            <button class="btn" data-redetect="raster" type="button">Image analysis + OCR</button>
+          </div>
+        </div>
+        <div class="side-block">
+          <h4>Manual crop (fallback)</h4>
+          <p class="muted small">Drag a rectangle around the complete shipping label on the page.</p>
+          <select id="manualTarget"></select>
+          <button class="btn primary" id="saveManual" type="button" disabled>Use my crop</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<iframe id="printFrame" class="hidden" title="print"></iframe>
+<div id="toast" class="toast hidden"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

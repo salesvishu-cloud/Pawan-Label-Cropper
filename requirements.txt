@@ -1,0 +1,11 @@
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9
+pymupdf>=1.24
+opencv-python-headless>=4.8
+numpy>=1.24
+pyzbar>=0.1.9
+pytesseract>=0.3.10
+# for running the tests
+httpx>=0.27
+pytest>=8

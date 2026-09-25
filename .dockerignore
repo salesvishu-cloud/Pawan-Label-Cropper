@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+tests/_out/
+.pytest_cache/
+.git/
+samples/
+*.zip

@@ -1,0 +1,12 @@
+# One-click deploy on Render.com (Blueprint): New + > Blueprint > pick this GitHub repo
+services:
+  - type: web
+    name: pawan-flipkart-label-cropper
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: PLC_ACCESS_PASSWORD
+        sync: false          # Render asks you to type a password during setup
+      - key: PLC_ACCESS_USER
+        value: pawan
